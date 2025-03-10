@@ -278,15 +278,22 @@ document.addEventListener('DOMContentLoaded', () => {
         window.addEventListener('scroll', debounce(updateHeaderState, 10), { passive: true });
     };
     
-    // Active nav link highlighting based on scroll position
+    // Verbesserte Funktion für aktive Navigationszustände
     const initActiveNavHighlight = () => {
-        if (cache.navLinksAnchors.length === 0 || cache.sections.length === 0) return;
+        const navLinks = document.querySelectorAll('.nav-links a');
+        if (navLinks.length === 0) return;
         
-        const updateActiveNav = debounce(() => {
-            let currentSection = null;
-            const scrollPosition = window.scrollY + 100; // Offset for better highlighting
+        const sections = Array.from(navLinks).map(link => {
+            const id = link.getAttribute('href').substring(1);
+            return document.getElementById(id);
+        }).filter(Boolean);
+        
+        const updateActiveNav = () => {
+            const scrollPosition = window.scrollY + 100; // Offset für bessere Hervorhebung
             
-            cache.sections.forEach(section => {
+            // Finde die aktuelle Sektion
+            let currentSection = null;
+            sections.forEach(section => {
                 const sectionTop = section.offsetTop;
                 const sectionHeight = section.offsetHeight;
                 
@@ -298,16 +305,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
             
-            cache.navLinksAnchors.forEach(link => {
+            // Aktualisiere aktive Klasse und ARIA-Attribute
+            navLinks.forEach(link => {
                 link.classList.remove('active');
+                link.removeAttribute('aria-current');
+                
                 if (link.getAttribute('href') === `#${currentSection}`) {
                     link.classList.add('active');
+                    link.setAttribute('aria-current', 'page');
                 }
             });
-        }, 100);
+        };
         
+        // Initialer Aufruf
+        updateActiveNav();
+        
+        // Beim Scrollen aktualisieren
         window.addEventListener('scroll', updateActiveNav, { passive: true });
-        updateActiveNav(); // Call initially
     };
     
     // ---------- Scrolling Effects ----------
