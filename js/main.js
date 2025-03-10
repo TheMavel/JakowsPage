@@ -410,37 +410,90 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Initialize tabs in learning path section
     const initTabs = () => {
-        if (!cache.tabButtons.length) return;
+        console.log('Initialisiere Tabs...');
+        const tabButtons = document.querySelectorAll('.path-button');
+        const tabContents = document.querySelectorAll('.path-content');
         
-        cache.tabButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const tabId = button.getAttribute('data-path');
-                
-                // Remove active class from all buttons and contents
-                cache.tabButtons.forEach(btn => btn.classList.remove('active'));
-                cache.tabContents.forEach(content => {
-                    content.classList.remove('active');
-                    content.style.opacity = '0'; // Start fade out
-                });
-                
-                // Add active class to selected button and content
-                button.classList.add('active');
-                const activeContent = document.getElementById(`${tabId}-path`);
-                
-                if (activeContent) {
-                    setTimeout(() => {
-                        activeContent.classList.add('active');
-                        setTimeout(() => {
-                            activeContent.style.opacity = '1'; // Fade in
-                        }, 50);
-                    }, 300); // Wait for fade out
-                }
+        console.log(`Gefundene Tab-Buttons: ${tabButtons.length}`);
+        console.log(`Gefundene Tab-Inhalte: ${tabContents.length}`);
+        
+        if (!tabButtons.length) {
+            console.warn('Keine Tab-Buttons gefunden!');
+            return;
+        }
+        
+        // Funktion zum Aktivieren eines Tabs
+        const activateTab = (tabId) => {
+            console.log(`Aktiviere Tab: ${tabId}`);
+            // Alle Tabs deaktivieren
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+                content.style.opacity = '0';
             });
+            
+            // Ausgewählten Tab aktivieren
+            const activeButton = document.querySelector(`.path-button[data-path="${tabId}"]`);
+            const activeContent = document.getElementById(`${tabId}-path`);
+            
+            if (activeButton && activeContent) {
+                console.log(`Tab-Button und Inhalt für ${tabId} gefunden`);
+                activeButton.classList.add('active');
+                activeButton.setAttribute('aria-selected', 'true');
+                
+                // Verzögertes Einblenden für sanften Übergang
+                setTimeout(() => {
+                    activeContent.classList.add('active');
+                    setTimeout(() => {
+                        activeContent.style.opacity = '1';
+                        console.log(`Tab ${tabId} vollständig aktiviert`);
+                    }, 50);
+                }, 150);
+            } else {
+                console.error(`Tab-Button oder Inhalt für ${tabId} nicht gefunden!`);
+                if (!activeButton) console.error(`Button mit data-path="${tabId}" nicht gefunden`);
+                if (!activeContent) console.error(`Element mit ID "${tabId}-path" nicht gefunden`);
+            }
+        };
+        
+        // Event-Listener für Tab-Buttons
+        tabButtons.forEach(button => {
+            const tabId = button.getAttribute('data-path');
+            console.log(`Füge Event-Listener für Tab ${tabId} hinzu`);
+            
+            button.addEventListener('click', () => {
+                console.log(`Tab ${tabId} wurde geklickt`);
+                activateTab(tabId);
+            });
+            
+            // ARIA-Attribute für Barrierefreiheit
+            button.setAttribute('role', 'tab');
+            button.setAttribute('aria-selected', 'false');
+            button.setAttribute('aria-controls', `${tabId}-path`);
         });
         
-        // Activate first tab by default if none is active
-        if (!document.querySelector('.path-button.active') && cache.tabButtons.length) {
-            cache.tabButtons[0].click();
+        // ARIA-Attribute für Tab-Inhalte
+        tabContents.forEach(content => {
+            content.setAttribute('role', 'tabpanel');
+            content.setAttribute('aria-hidden', 'true');
+        });
+        
+        // Ersten Tab standardmäßig aktivieren, wenn kein Tab aktiv ist
+        if (!document.querySelector('.path-button.active') && tabButtons.length) {
+            console.log('Kein aktiver Tab gefunden, aktiviere ersten Tab');
+            const firstTabId = tabButtons[0].getAttribute('data-path');
+            activateTab(firstTabId);
+        } else {
+            // Wenn bereits ein Tab aktiv ist, stelle sicher, dass der Inhalt sichtbar ist
+            const activeButton = document.querySelector('.path-button.active');
+            if (activeButton) {
+                console.log('Aktiver Tab gefunden, stelle Sichtbarkeit sicher');
+                const activeTabId = activeButton.getAttribute('data-path');
+                const activeContent = document.getElementById(`${activeTabId}-path`);
+                if (activeContent) {
+                    activeContent.style.opacity = '1';
+                }
+            }
         }
     };
     
